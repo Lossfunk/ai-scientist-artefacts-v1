@@ -1,0 +1,65 @@
+[
+    {
+    "claim": "[COMPLETED H1] On the JailbreakBench benchmark, Semantic Entropy (SE) is outperformed by simpler textual consistency baselines. The performance ranking of baselines is model-dependent: Avg Pairwise BERTScore is strongest for Llama-4-Scout-17B, while Embedding Variance is strongest for Qwen-2.5-7B-Instruct.",
+    "dataset": "JailbreakBench/JBB-Behaviors (120-item validation split).",
+    "metric": { "primary": "AUROC", "secondary": ["FNR@5%FPR", "EER"], "diagnostics": ["Class-conditional score means", "SE cluster counts", "Response length distributions"] },
+    "baseline": "Avg Pairwise BERTScore, Embedding Variance, Levenshtein Variance.",
+    "success_threshold": "N/A - Completed. Results confirmed SE underperformance.",
+    "budget": { "compute": "N/A", "hours": "N/A", "memory": "N/A" },
+    "citations": { "dataset": [{"title": "JailbreakBench: An Open Robustness Benchmark for Jailbreaking Large Language Models", "url": "https://arxiv.org/abs/2404.01318", "venue": "NeurIPS", "year": "2024"}] }
+    },
+    {
+    "claim": "[COMPLETED H2] The failure of SE generalizes to the HarmBench-Contextual benchmark, where it is again outperformed by simpler baselines. The best-performing baseline is again model-dependent, with Embedding Variance proving strongest for Llama-4-Scout-17B.",
+    "dataset": "HarmBench-Contextual (81 harmful prompts) vs. a matched benign set ('HarmBench Twins').",
+    "metric": { "primary": "FNR@5%FPR", "secondary": ["AUROC", "EER"], "diagnostics": ["Class-conditional score means", "SE cluster counts", "Response length distributions"] },
+    "baseline": "Avg Pairwise BERTScore, Embedding Variance, Levenshtein Variance.",
+    "success_threshold": "N/A - Completed. Results confirmed SE underperformance and baseline instability.",
+    "budget": { "compute": "N/A", "hours": "N/A", "memory": "N/A" },
+    "citations": { "dataset": [{"title": "HarmBench: A Standardized Evaluation Framework for Automated Red Teaming and Robust Refusal", "url": "https://arxiv.org/abs/2402.04249", "venue": "arXiv", "year": "2024"}] }
+    },
+    {
+    "claim": "[NEW H3] After controlling for response length as a confound, the residual signal from Semantic Entropy will fail to separate harmful and benign prompts on both JailbreakBench and HarmBench datasets for Llama-4-Scout-17B, achieving near-random performance.",
+    "dataset": "Existing generated responses and scores from H1 (JailbreakBench) and H2 (HarmBench).",
+    "metric": { "primary": "AUROC of length-residualized SE scores.", "secondary": ["FNR@5%FPR of length-residualized SE scores."], "diagnostics": ["Goodness-of-fit (R-squared) of the linear model SE ~ log(length) on benign prompts."] },
+    "baseline": "The performance of other length-residualized baselines (BERTScore, Embedding Variance).",
+    "success_threshold": "The AUROC of length-residualized SE is below 0.55 for Llama-4-Scout-17B on both datasets.",
+    "budget": { "compute": "1 GPU", "hours": "1", "memory": "40GB" },
+    "citations": {}
+    },
+    {
+    "claim": "[NEW H4] Semantic Entropy's utility as a detector is uniquely brittle to hyperparameter changes. Its performance on Qwen-2.5-7B-Instruct for the HarmBench dataset will collapse when either the clustering threshold (τ) is increased from 0.1 to ≥0.2 or the number of samples (N) is increased from 5 to 10.",
+    "dataset": "Existing H2 responses from Qwen on HarmBench, with a targeted top-up of 5 additional responses per prompt for the N=10 test.",
+    "metric": { "primary": "FNR@5%FPR", "secondary": ["AUROC"], "diagnostics": ["Grid report of performance vs. τ and N."] },
+    "baseline": "The relatively stable performance of the Embedding Variance baseline under the same conditions.",
+    "success_threshold": "The FNR@5%FPR for SE on Qwen@HarmBench increases by at least 20 percentage points when τ is changed from 0.1 to 0.2 OR when N is changed from 5 to 10.",
+    "budget": { "compute": "1 GPU", "hours": "3", "memory": "40GB" },
+    "citations": {}
+    },
+    {
+    "claim": "[NEW H5] Paraphrasing JailbreakBench prompts to mitigate data contamination will disproportionately degrade the performance of SE compared to simpler baselines, particularly on the weaker Qwen-2.5-7B-Instruct model, by disrupting memorized refusal templates.",
+    "dataset": "A new, small 'JBB-Paraphrase-2025-08' dataset containing paraphrased versions of harmful and benign prompts from the JailbreakBench test set.",
+    "metric": { "primary": "ΔFNR@5%FPR (Change in FNR@5%FPR from original to paraphrased data).", "secondary": ["ΔAUROC"], "diagnostics": ["Comparison of duplicate rates and cluster counts between original and paraphrased responses."] },
+    "baseline": "The performance degradation (ΔFNR@5%FPR) of other baselines (BERTScore, Embedding Variance).",
+    "success_threshold": "For Qwen-2.5-7B-Instruct, the increase in FNR@5%FPR for SE is at least 15 percentage points larger than the increase for any other baseline.",
+    "budget": { "compute": "1 GPU", "hours": "4", "memory": "40GB" },
+    "citations": { "dataset": [{"title": "LiveBench: A Challenging, Contamination-Limited LLM Benchmark", "url": "https://openreview.net/forum?id=sKYHBTAxVa", "venue": "ICLR", "year": "2025"}] }
+    },
+    {
+    "claim": "[NEW H6] In a qualitative audit of Semantic Entropy's failures on JailbreakBench for Llama-4-Scout-17B, over 80% of its false negatives at a 5% FPR threshold will be directly attributable to the 'Consistency Confound' mechanism, characterized by a high response duplicate rate (>0.6) and a low cluster count (≤2).",
+    "dataset": "The subset of harmful prompts from the H1 JailbreakBench experiment that were misclassified by the SE detector (τ=0.3) for Llama-4-Scout-17B.",
+    "metric": { "primary": "Percentage of false negatives meeting the 'Consistency Confound' criteria.", "secondary": ["Qualitative examples of templated refusals."], "diagnostics": ["Per-prompt duplicate rate", "Per-prompt SE cluster count"] },
+    "baseline": "N/A - This is a descriptive audit of a specific failure mode.",
+    "success_threshold": "Over 80% of the audited false negatives are verified to be caused by the 'Consistency Confound' mechanism.",
+    "budget": { "compute": "1 GPU", "hours": "1", "memory": "40GB" },
+    "citations": {}
+    },
+    {
+    "claim": "[NEW H7] The observed 'Consistency Confound'—where stronger alignment leads to lower output dispersion and poorer SE performance—will be even more pronounced on a larger, state-of-the-art model. On JailbreakBench, Qwen2.5-72B-Instruct will exhibit a lower (worse) AUROC for SE than Llama-4-Scout-17B, while showing an equal or better AUROC for a simple baseline like BERTScore.",
+    "dataset": "A small, representative slice (e.g., 60 harmful, 60 benign) of the JailbreakBench test set.",
+    "metric": { "primary": "AUROC", "secondary": ["FNR@5%FPR"], "diagnostics": ["Response duplicate rate", "Class-conditional score means for all detectors."] },
+    "baseline": "The performance of SE vs. BERTScore on the smaller Llama-4-Scout-17B model.",
+    "success_threshold": "The AUROC for SE on Qwen2.5-72B-Instruct is at least 0.05 lower than on Llama-4-Scout-17B, AND the AUROC for BERTScore is greater than or equal to its performance on Llama-4-Scout-17B.",
+    "budget": { "compute": "1 GPU", "hours": "6", "memory": "40GB" },
+    "citations": { "baseline": [{"title": "Qwen2.5 technical report", "url": "https://qwen.oss-cn-beijing.aliyuncs.com/Qwen2.5/Qwen2.5_technical_report.pdf", "venue": "arXiv", "year": "2025"}]}
+    }
+    ]

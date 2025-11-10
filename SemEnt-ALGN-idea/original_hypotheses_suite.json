@@ -1,0 +1,130 @@
+[
+    {
+    "claim": "A detector using semantic entropy will achieve a significantly higher AUROC and lower False Negative Rate (FNR) than detectors using simpler consistency metrics (pairwise BERTScore, embedding-spread, edit-distance variance) for distinguishing standard jailbreaks from benign prompts.",
+    "decision_relevance": "Validates if the chosen signal (semantic entropy) is robustly superior to simpler, cheaper alternatives for this security application, justifying its use.",
+    "constants": {
+    "decoding": {
+    "N": 5,
+    "temperature": 0.7,
+    "top_p": 0.95,
+    "max_new_tokens": 256,
+    "seed": 42
+    },
+    "embedding_model": "Alibaba-NLP/gte-large-en-v1.5"
+    },
+    "models": {
+    "calibration": ["Qwen/Qwen2.5-7B-Instruct"],
+    "test": ["meta-llama/Llama-4-Scout-17B-16E-Instruct"]
+    },
+    "dataset": "JailbreakBench/JBB-Behaviors (harmful vs. benign prompts)",
+    "primary_metric": "AUROC",
+    "secondary_metric": "False Negative Rate @ 5% False Positive Rate",
+    "baseline": "Detectors using alternative consistency features: 1) Average pairwise BERTScore, 2) Variance of response embeddings, 3) Variance of Levenshtein distance.",
+    "success_threshold": "AUROC for semantic entropy is > 0.1 higher than the best-performing simple baseline's AUROC. FNR is also lower.",
+    "budget": {
+    "compute": "1 GPU",
+    "hours": "4",
+    "memory": "40GB"
+    },
+    "citations": {
+    "dataset": [{"title": "JailbreakBench: An Open Robustness Benchmark for Jailbreaking Large Language Models", "url": "https://proceedings.neurips.cc/paper_files/paper/2024/file/63092d79154adebd7305dfd498cbff70-Paper-Datasets_and_Benchmarks_Track.pdf", "venue": "NeurIPS", "year": "2024"}],
+    "baseline": [{"title": "BERTScore: Evaluating Text Generation with BERT", "url": "https://openreview.net/forum?id=SkeHuCVFDr", "venue": "ICLR", "year": "2020"}],
+    "metrics": [{"title": "Detecting hallucinations in large language models using semantic entropy", "url": "https://www.nature.com/articles/s41586-024-07421-0", "venue": "Nature", "year": "2024"}]
+    }
+    },
+    {
+    "claim": "The semantic entropy detector, including its early-span variant (first 32 tokens), will maintain high performance (AUROC > 0.85) when distinguishing harmful prompts from a matched set of 'benign-but-hard' prompts, proving sensitivity to malicious conflict over mere complexity.",
+    "decision_relevance": "Directly addresses the primary 'hardness confound' skepticism. Success indicates the signal is robust and has a low false positive rate on complex but safe queries, making it viable for deployment.",
+    "constants": {
+    "decoding": { "N": 5, "temperature": 0.7, "top_p": 0.95, "max_new_tokens": 256, "seed": 42 },
+    "embedding_model": "Alibaba-NLP/gte-large-en-v1.5"
+    },
+    "models": {
+    "calibration": ["Qwen/Qwen2.5-7B-Instruct"],
+    "test": ["meta-llama/Llama-4-Scout-17B-16E-Instruct"]
+    },
+    "dataset": "JailbreakBench/JBB-Behaviors, using the 'harmful' config as the positive class and the 'benign' config (matched on topic and structure) as the 'benign-but-hard' negative class.",
+    "primary_metric": "AUROC",
+    "secondary_metric": "FNR @ 5% FPR",
+    "baseline": "An absolute performance test against a challenging negative control dataset. A naive complexity-driven detector would fail to meet this threshold.",
+    "success_threshold": "AUROC > 0.85 and FNR @ 5% FPR < 0.15.",
+    "budget": { "compute": "1 GPU", "hours": "4", "memory": "40GB" },
+    "citations": {
+    "dataset": [{"title": "JailbreakBench: An Open Robustness Benchmark for Jailbreaking Large Language Models", "url": "https://proceedings.neurips.cc/paper_files/paper/2024/file/63092d79154adebd7305dfd498cbff70-Paper-Datasets_and_Benchmarks_Track.pdf", "venue": "NeurIPS", "year": "2024"}]
+    }
+    },
+    {
+    "claim": "A semantic entropy detector, with its threshold calibrated on a Llama model using JailbreakBench, will generalize to detect 'contextual' attacks on a Qwen model using HarmBench with an AUROC > 0.70, without any re-calibration.",
+    "decision_relevance": "Tests if the 'internal conflict' signal is universal across both attack structures and model families, a key requirement for a general-purpose defense.",
+    "constants": {
+    "decoding": { "N": 5, "temperature": 0.7, "top_p": 0.95, "max_new_tokens": 256, "seed": 42 },
+    "embedding_model": "Alibaba-NLP/gte-large-en-v1.5"
+    },
+    "models": {
+    "calibration": ["meta-llama/Llama-4-Scout-17B-16E-Instruct"],
+    "test": ["Qwen/Qwen3-235B-A22B-Instruct-2507"]
+    },
+    "dataset": "Calibration on JailbreakBench/JBB-Behaviors (harmful vs. benign); Zero-shot evaluation on HarmBench's 'contextual' text behaviors (positive class) vs. matched benign prompts.",
+    "primary_metric": "AUROC",
+    "secondary_metric": "FNR @ 5% FPR",
+    "baseline": "A random classifier (AUROC of 0.5).",
+    "success_threshold": "AUROC > 0.70 on the out-of-distribution test set.",
+    "budget": { "compute": "1 GPU", "hours": "6", "memory": "40GB" },
+    "citations": {
+    "dataset": [
+    {"title": "JailbreakBench: An Open Robustness Benchmark...", "url": "https://proceedings.neurips.cc/paper_files/paper/2024/file/63092d79154adebd7305dfd498cbff70-Paper-Datasets_and_Benchmarks_Track.pdf", "venue": "NeurIPS", "year": "2024"},
+    {"title": "HarmBench: A Standardized Evaluation Framework...", "url": "https://arxiv.org/abs/2402.04249", "venue": "arXiv", "year": "2024"}
+    ]
+    }
+    },
+    {
+    "claim": "When deployed as a pre-reply gate, the semantic entropy detector will reduce the Attack Success Rate (ASR) of an adaptive jailbreak algorithm (TAP) by at least 25 percentage points, while maintaining a False Positive Rate below 10% on benign prompts.",
+    "decision_relevance": "Addresses spoofability by a dynamic adversary. Success demonstrates practical defensive value against adaptive threats, not just static datasets.",
+    "constants": {
+    "decoding": { "N": 5, "temperature": 0.7, "top_p": 0.95, "max_new_tokens": 256, "seed": 42 },
+    "embedding_model": "Alibaba-NLP/gte-large-en-v1.5"
+    },
+    "models": {
+    "calibration": ["Qwen/Qwen2.5-7B-Instruct"],
+    "test": ["meta-llama/Llama-4-Scout-17B-16E-Instruct"]
+    },
+    "dataset": "Procedural benchmark using the official TAP implementation against JailbreakBench behaviors.",
+    "attack_parameters": {
+    "repository": "https://github.com/RICommunity/TAP",
+    "commit_hash": "7bcdad30537c679d00699fac16052dc916c89a6d",
+    "budget_per_prompt": "max 20 attempts or 4096 tokens"
+    },
+    "defense_protocol": "The detector runs pre-reply. If entropy exceeds a pre-calibrated threshold, the response is blocked and counted as a failed attack (for ASR calculation).",
+    "primary_metric": "ASR Reduction",
+    "secondary_metric": "FPR on JBB-Benign prompts",
+    "baseline": "The ASR of the undefended test model against the TAP algorithm with an identical attack budget.",
+    "success_threshold": "ASR of defended model is at least 25 points lower than baseline ASR, and FPR on benign prompts is < 0.10.",
+    "budget": { "compute": "1 GPU", "hours": "6", "memory": "40GB" },
+    "citations": {
+    "dataset": [{"title": "Tree of Attacks: Jailbreaking Black-Box LLMs Automatically", "url": "https://arxiv.org/abs/2312.02119", "venue": "NeurIPS", "year": "2024"}],
+    "metrics": [{"title": "JailbreakBench: An Open Robustness Benchmark...", "url": "https://proceedings.neurips.cc/paper_files/paper/2024/file/63092d79154adebd7305dfd498cbff70-Paper-Datasets_and_Benchmarks_Track.pdf", "venue": "NeurIPS", "year": "2024"}]
+    }
+    },
+    {
+    "claim": "The zero-shot semantic entropy detector will achieve a Complementary Detection Rate (CDR) of over 20% on the False Negatives (FNs) produced by the SOTA supervised classifier allenai/wildguard.",
+    "decision_relevance": "Positions the method within a defense-in-depth strategy. Success proves it provides an orthogonal signal that catches what SOTA classifiers miss, adding clear value to a safety pipeline.",
+    "constants": {
+    "decoding": { "N": 5, "temperature": 0.7, "top_p": 0.95, "max_new_tokens": 256, "seed": 42 },
+    "embedding_model": "Alibaba-NLP/gte-large-en-v1.5"
+    },
+    "models": {
+    "calibration": ["Qwen/Qwen2.5-7B-Instruct"],
+    "test": ["Models whose outputs are in the WildGuardTest dataset"]
+    },
+    "dataset": "allenai/wildguardmix (using the 'test' split)",
+    "primary_metric": "Complementary Detection Rate (CDR)",
+    "protocol": "1. Identify WildGuard's FNs by applying its default threshold to its predictions on WildGuardTest. 2. Calculate CDR = (# of WildGuard FNs where SE > threshold) / (Total # of WildGuard FNs). 3. The SE threshold is calibrated on a separate dataset (JailbreakBench) to maintain the zero-shot nature of the test.",
+    "baseline": "The set of False Negative predictions from the allenai/wildguard model.",
+    "success_threshold": "CDR > 0.20",
+    "budget": { "compute": "1 GPU", "hours": "5", "memory": "40GB" },
+    "citations": {
+    "dataset": [{"title": "WildGuard: Open One-Stop Moderation Tools for Safety Risks, Jailbreaks, and Refusals of LLMs", "url": "https://huggingface.co/datasets/allenai/wildguardmix", "venue": "Hugging Face", "year": "2024"}],
+    "baseline": [{"title": "WildGuard ...", "url": "https://huggingface.co/allenai/wildguard", "venue": "Hugging Face", "year": "2024"}]
+    }
+    }
+    ]
